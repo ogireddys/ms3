@@ -2,9 +2,9 @@
 ms3 demo project
 
 # Environment
-Mule 3.9
-JDK 1.8
-Java Algorithm avialable at location src/main/java/ms3project/FindMultiples.java
+1) Mule 3.9
+2) JDK 1.8
+3) Java Algorithm avialable at location src/main/java/ms3project/FindMultiples.java
 
 # Steps to install/run the project:
 
