@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+</head>
+<script>
+function onSubmitFn() {
+	var txt = "";
+var xmlhttp = new XMLHttpRequest();
+xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+        myObj = JSON.parse(this.responseText);
+        myObjData= myObj.data;
+        txt += "<text>Output</text><table border='1'><th>key</th><th>value</th>"
+        for (x in myObjData) {
+            txt += "<tr><td>" + myObjData[x].key + "</td><td>" + myObjData[x].value + "</td></tr>";
+        }
+        txt += "</table>" 
+        document.getElementById("demo").innerHTML = txt;
+    }
+    else{
+    	document.getElementById("demo").innerHTML=this.responseText;
+    }
+};
+
+var input1=document.getElementById("input1").value;
+var input2=document.getElementById("input2").value;
+var order="";
+
+if (document.getElementById("order").checked) {
+  order = document.getElementById('order').value;
+}
+if (document.getElementById("order1").checked) {
+  order = document.getElementById('order1').value;
+}
+
+xmlhttp.open("GET", "http://localhost:8081/findReplaceAll?input1="+input1+"&input2="+input2+"&order="+order, true);
+xmlhttp.send();
+}
+</script>
+<body>
+
+  Enter a number range : 
+  <input id='input1' type="number" name="input1" min="1" max="200"> to 
+  <input id="input2" type="number" name="input2" min="1" max="200">
+<br>
+  <input id="order" type="radio" name="order" value="natural" checked> natural<br>
+  <input id="order1" type="radio" name="order" value="reverse"> reverse<br>
+  <input type="submit" value="Submit" onclick="onSubmitFn()">
+</form>
+<p id="demo"></p>
+</body>
+</html>

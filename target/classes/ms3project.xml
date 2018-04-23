@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="GET/findReplaceAll">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/findReplaceAll" doc:name="HTTP"/>
+        <set-variable variableName="order" value="#[message.inboundProperties.'http.query.params'.get('order')]" doc:name="set order Variable"/>
+        <set-property propertyName="Access-Control-Allow-Origin" value="*" doc:name="set Access-Control-Allow-Origin"/>
+        <component class="ms3project.FindMultiples" doc:name="Find and replace multiples" metadata:id="1af9f290-b824-452c-8f1d-3ecbeb64ba22"/>
+        <dw:transform-message doc:name="map to json" metadata:id="3a4a596b-4834-4cc1-ba8b-8fc33eac90e8">
+            <dw:input-payload doc:sample="hashmap_json.json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+
+data:(payload pluck $$ map {
+key: ($ as :string) as :number,
+value: payload[$$]
+}
+)]]></dw:set-payload>
+        </dw:transform-message>
+        <choice doc:name="order (natural or reverse)">
+            <when expression="flowVars.order=='reverse'">
+                <dw:transform-message doc:name="Sort reverse" metadata:id="dc8a3461-3be0-4ee6-943d-25d21459a9b0">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+data:(payload.data orderBy $.key) [-1 to 0]]]></dw:set-payload>
+                </dw:transform-message>
+            </when>
+            <otherwise>
+                <dw:transform-message doc:name="sort natural">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+data:(payload.data orderBy $.key) ]]></dw:set-payload>
+                </dw:transform-message>
+            </otherwise>
+        </choice>
+        <logger level="INFO" doc:name="Logger"/>
+        <exception-strategy ref="ms3projectCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <catch-exception-strategy name="ms3projectCatch_Exception_Strategy">
+        <set-payload value="#['Please check your inputs &lt;br&gt; Example url &lt;br&gt;http://localhost:8081/findReplaceAll?input1=56&amp;input2=100&amp;order=natural']" doc:name="Set Payload"/>
+        <set-property propertyName="http.status" value="#[400]" doc:name="Property"/>
+    </catch-exception-strategy>
+
+</mule>
